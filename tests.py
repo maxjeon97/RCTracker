@@ -478,32 +478,47 @@ class AuthViewsTestCase(TestCase):
                 self.assertEqual(sess.get(CURR_USER_KEY), None)
 
 
-# class NavBarTestCase(TestCase):
-#     """Tests navigation bar."""
+class NavBarTestCase(TestCase):
+    """Tests navigation bar."""
 
-#     def setUp(self):
-#         """Before tests, add sample user."""
+    def setUp(self):
+        """Before tests, add sample user."""
 
-#         User.query.delete()
+        User.query.delete()
 
-#         user = User.register(**TEST_USER_DATA)
+        user = User.register(**TEST_USER_DATA)
 
-#         db.session.add_all([user])
-#         db.session.commit()
+        db.session.add_all([user])
+        db.session.commit()
 
-#         self.user_id = user.id
+        self.user_id = user.id
 
-#     def tearDown(self):
-#         """After tests, remove all users."""
+    def tearDown(self):
+        """After tests, remove all users."""
 
-#         User.query.delete()
-#         db.session.commit()
+        User.query.delete()
+        db.session.commit()
 
-#     def test_anon_navbar(self):
-#         self.fail("FIXME: write this test")
+    def test_anon_navbar(self):
+        with app.test_client() as client:
+            resp = client.get("/")
 
-#     def test_logged_in_navbar(self):
-#         self.fail("FIXME: write this test")
+            self.assertIn(b"Keep Track of Your Favorite Cafes", resp.data)
+            self.assertIn(b"Sign Up", resp.data)
+            self.assertIn(b"Log In", resp.data)
+            self.assertNotIn(b"Log Out", resp.data)
+
+    def test_logged_in_navbar(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
+            resp = client.get("/")
+
+            self.assertIn(b"Keep Track of Your Favorite Cafes", resp.data)
+            self.assertNotIn(b"Sign Up", resp.data)
+            self.assertNotIn(b"Log In", resp.data)
+            self.assertIn(b"Log Out", resp.data)
+            self.assertIn(b"Testy MacTest", resp.data)
 
 
 # class ProfileViewsTestCase(TestCase):
