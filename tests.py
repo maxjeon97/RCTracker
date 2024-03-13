@@ -6,12 +6,15 @@ import os
 os.environ["DATABASE_URL"] = "postgresql:///flaskcafe_test"
 os.environ["FLASK_DEBUG"] = "0"
 
-# import re
+import re
 from unittest import TestCase
 
-# from flask import session
-from app import app  # , CURR_USER_KEY
-from models import db, Cafe, City, connect_db  # , User, Like
+from models import db, Cafe, City, User, Like
+from flask_bcrypt import Bcrypt
+
+from app import app , CURR_USER_KEY, NOT_LOGGED_IN_MSG
+
+bcrypt = Bcrypt()
 
 # Make Flask errors be real errors, rather than HTML pages with error info
 app.config['TESTING'] = True
@@ -35,11 +38,11 @@ def debug_html(response, label="DEBUGGING"):  # pragma: no cover
     print("\n\n")
 
 
-# def login_for_test(client, user_id):
-#     """Log in this user."""
+def login_for_test(client, user_id):
+    """Log in this user."""
 
-#     with client.session_transaction() as sess:
-#         sess[CURR_USER_KEY] = user_id
+    with client.session_transaction() as sess:
+        sess[CURR_USER_KEY] = user_id
 
 
 #######################################
@@ -61,23 +64,23 @@ CAFE_DATA = dict(
     image_url="http://testcafeimg.com/"
 )
 
-# CAFE_DATA_EDIT = dict(
-#     name="new-name",
-#     description="new-description",
-#     url="http://new-image.com/",
-#     address="500 Sansome St",
-#     city_code="sf",
-#     image_url="http://new-image.com/"
-# )
+CAFE_DATA_EDIT = dict(
+    name="new-name",
+    description="new-description",
+    url="http://new-image.com/",
+    address="500 Sansome St",
+    city_code="sf",
+    image_url="http://new-image.com/"
+)
 
-# TEST_USER_DATA = dict(
-#     username="test",
-#     first_name="Testy",
-#     last_name="MacTest",
-#     description="Test Description.",
-#     email="test@test.com",
-#     password="secret",
-# )
+TEST_USER_DATA = dict(
+    username="test",
+    first_name="Testy",
+    last_name="MacTest",
+    description="Test Description.",
+    email="test@test.com",
+    password="secret",
+)
 
 # TEST_USER_DATA_EDIT = dict(
 #     first_name="new-fn",
@@ -87,15 +90,15 @@ CAFE_DATA = dict(
 #     image_url="http://new-image.com",
 # )
 
-# TEST_USER_DATA_NEW = dict(
-#     username="new-username",
-#     first_name="new-fn",
-#     last_name="new-ln",
-#     description="new-description",
-#     password="secret",
-#     email="new-email@test.com",
-#     image_url="http://new-image.com",
-# )
+TEST_USER_DATA_NEW = dict(
+    username="new-username",
+    first_name="new-fn",
+    last_name="new-ln",
+    description="new-description",
+    password="secret",
+    email="new-email@test.com",
+    image_url="http://new-image.com",
+)
 
 # ADMIN_USER_DATA = dict(
 #     username="admin",
@@ -118,7 +121,7 @@ class HomepageViewsTestCase(TestCase):
     def test_homepage(self):
         with app.test_client() as client:
             resp = client.get("/")
-            self.assertIn(b'Where Coffee Dreams Come True', resp.data)
+            self.assertIn(b'Keep Track of Your Favorite Cafes', resp.data)
 
 
 #######################################
@@ -133,6 +136,7 @@ class CityModelTestCase(TestCase):
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
 
         sf = City(**CITY_DATA)
         db.session.add(sf)
@@ -140,15 +144,20 @@ class CityModelTestCase(TestCase):
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
 
+        user = User(**TEST_USER_DATA)
+        db.session.add(user)
+
         db.session.commit()
 
         self.cafe = cafe
+        self.user_id = user.id
 
     def tearDown(self):
         """After each test, remove all cafes."""
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
         db.session.commit()
 
     # depending on how you solve exercise, you may have things to test on
@@ -167,6 +176,7 @@ class CafeModelTestCase(TestCase):
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
 
         sf = City(**CITY_DATA)
         db.session.add(sf)
@@ -174,15 +184,21 @@ class CafeModelTestCase(TestCase):
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
 
+        user = User(**TEST_USER_DATA)
+        db.session.add(user)
+
         db.session.commit()
 
         self.cafe = cafe
+        self.user_id = user.id
 
     def tearDown(self):
         """After each test, remove all cafes."""
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
+
         db.session.commit()
 
     def test_get_city_state(self):
@@ -197,6 +213,7 @@ class CafeViewsTestCase(TestCase):
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
 
         sf = City(**CITY_DATA)
         db.session.add(sf)
@@ -204,229 +221,261 @@ class CafeViewsTestCase(TestCase):
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
 
+        user = User(**TEST_USER_DATA)
+        db.session.add(user)
+
         db.session.commit()
 
         self.cafe_id = cafe.id
+        self.user_id = user.id
 
     def tearDown(self):
         """After each test, remove all cafes."""
 
         Cafe.query.delete()
         City.query.delete()
+        User.query.delete()
+
         db.session.commit()
 
     def test_list(self):
         with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
             resp = client.get("/cafes")
             self.assertEqual(resp.status_code, 200)
             self.assertIn(b"Test Cafe", resp.data)
 
     def test_detail(self):
         with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
             resp = client.get(f"/cafes/{self.cafe_id}")
             self.assertEqual(resp.status_code, 200)
             self.assertIn(b"Test Cafe", resp.data)
             self.assertIn(b'testcafe.com', resp.data)
 
 
-# class CafeAdminViewsTestCase(TestCase):
-#     """Tests for add/edit views on cafes."""
+class CafeAdminViewsTestCase(TestCase):
+    """Tests for add/edit views on cafes."""
 
-#     def setUp(self):
-#         """Before each test, add sample city, users, and cafes"""
+    def setUp(self):
+        """Before each test, add sample city, users, and cafes"""
 
-#         City.query.delete()
-#         Cafe.query.delete()
+        City.query.delete()
+        Cafe.query.delete()
+        User.query.delete()
 
-#         sf = City(**CITY_DATA)
-#         db.session.add(sf)
+        sf = City(**CITY_DATA)
+        db.session.add(sf)
 
-#         cafe = Cafe(**CAFE_DATA)
-#         db.session.add(cafe)
+        cafe = Cafe(**CAFE_DATA)
+        db.session.add(cafe)
 
-#         db.session.commit()
+        user = User(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         self.cafe_id = cafe.id
+        db.session.commit()
 
-#     def tearDown(self):
-#         """After each test, delete the cities."""
+        self.cafe_id = cafe.id
+        self.user_id = user.id
 
-#         Cafe.query.delete()
-#         City.query.delete()
-#         db.session.commit()
+    def tearDown(self):
+        """After each test, delete the cities."""
 
-#     def test_add(self):
-#         with app.test_client() as client:
-#             resp = client.get(f"/cafes/add")
-#             self.assertIn(b'Add Cafe', resp.data)
+        Cafe.query.delete()
+        City.query.delete()
+        User.query.delete()
 
-#             resp = client.post(
-#                 f"/cafes/add",
-#                 data=CAFE_DATA_EDIT,
-#                 follow_redirects=True)
-#             self.assertIn(b'added', resp.data)
+        db.session.commit()
 
-#    def test_dynamic_cities_vocab(self):
-#        id = self.cafe_id
+    def test_add(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
 
-#        # the following is a regular expression for the HTML for the drop-down
-#        # menu pattern we want to check for
-#        choices_pattern = re.compile(
-#            r'<select [^>]*name="city_code"[^>]*><option [^>]*value="sf">' +
-#            r'San Francisco</option></select>')
+            resp = client.get(f"/cafes/add")
+            self.assertIn(b'Add Cafe', resp.data)
 
-#        with app.test_client() as client:
-#            resp = client.get(f"/cafes/add")
-#            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+            resp = client.post(
+                f"/cafes/add",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'added', resp.data)
 
-#            resp = client.get(f"/cafes/{id}/edit")
-#            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+    def test_dynamic_cities_vocab(self):
+        id = self.cafe_id
 
-#     def test_edit(self):
-#         id = self.cafe_id
+        # the following is a regular expression for the HTML for the drop-down
+        # menu pattern we want to check for
+        choices_pattern = re.compile(
+           r'<select [^>]*name="city_code"[^>]*><option [^>]*value="sf">' +
+           r'San Francisco</option></select>')
 
-#         with app.test_client() as client:
-#             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-#             self.assertIn(b'Edit Test Cafe', resp.data)
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
 
-#             resp = client.post(
-#                 f"/cafes/{id}/edit",
-#                 data=CAFE_DATA_EDIT,
-#                 follow_redirects=True)
-#             self.assertIn(b'edited', resp.data)
+            resp = client.get(f"/cafes/add")
+            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
-#    def test_edit_form_shows_curr_data(self):
-#        id = self.cafe_id
+            resp = client.get(f"/cafes/{id}/edit")
+            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
-#        with app.test_client() as client:
-#            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-#            self.assertIn(b'Test description', resp.data)
+    def test_edit(self):
+        id = self.cafe_id
+
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Edit Cafe', resp.data)
+
+            resp = client.post(
+                f"/cafes/{id}/edit",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'edited', resp.data)
+
+    def test_edit_form_shows_curr_data(self):
+        id = self.cafe_id
+
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Test description', resp.data)
 
 
 #######################################
 # users
 
 
-# class UserModelTestCase(TestCase):
-#     """Tests for the user model."""
+class UserModelTestCase(TestCase):
+    """Tests for the user model."""
 
-#     def setUp(self):
-#         """Before each test, add sample users."""
+    def setUp(self):
+        """Before each test, add sample users."""
 
-#         User.query.delete()
+        User.query.delete()
 
-#         user = User.register(**TEST_USER_DATA)
-#         db.session.add(user)
+        user = User.register(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         db.session.commit()
+        db.session.commit()
 
-#         self.user = user
+        self.user = user
 
-#     def tearDown(self):
-#         """After each test, remove all users."""
+    def tearDown(self):
+        """After each test, remove all users."""
 
-#         User.query.delete()
-#         db.session.commit()
+        User.query.delete()
+        db.session.commit()
 
-#     def test_authenticate(self):
-#         rez = User.authenticate("test", "secret")
-#         self.assertEqual(rez, self.user)
+    def test_authenticate(self):
+        rez = User.authenticate("test", "secret")
+        self.assertEqual(rez, self.user)
 
-#     def test_authenticate_fail(self):
-#         rez = User.authenticate("no-such-user", "secret")
-#         self.assertFalse(rez)
+    def test_authenticate_fail(self):
+        rez = User.authenticate("no-such-user", "secret")
+        self.assertFalse(rez)
 
-#         rez = User.authenticate("test", "password")
-#         self.assertFalse(rez)
+        rez = User.authenticate("test", "password")
+        self.assertFalse(rez)
 
-#     def test_full_name(self):
-#         self.assertEqual(self.user.get_full_name(), "Testy MacTest")
+    def test_full_name(self):
+        self.assertEqual(self.user.get_full_name(), "Testy MacTest")
 
-#     def test_register(self):
-#         u = User.register(**TEST_USER_DATA)
-#         # test that password gets bcrypt-hashed (all start w/$2b$)
-#         self.assertEqual(u.hashed_password[:4], "$2b$")
-#         db.session.rollback()
+    def test_register(self):
+        u = User.register(**TEST_USER_DATA)
+        # test that password gets bcrypt-hashed (all start w/$2b$)
+        self.assertEqual(u.password[:4], "$2b$")
+        db.session.rollback()
 
 
-# class AuthViewsTestCase(TestCase):
-#     """Tests for views on logging in/logging out/registration."""
+class AuthViewsTestCase(TestCase):
+    """Tests for views on logging in/logging out/registration."""
 
-#     def setUp(self):
-#         """Before each test, add sample users."""
+    def setUp(self):
+        """Before each test, add sample users."""
 
-#         User.query.delete()
+        User.query.delete()
 
-#         user = User.register(**TEST_USER_DATA)
-#         db.session.add(user)
+        user = User.register(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         db.session.commit()
+        db.session.commit()
 
-#         self.user_id = user.id
+        self.user_id = user.id
 
-#     def tearDown(self):
-#         """After each test, remove all users."""
+    def tearDown(self):
+        """After each test, remove all users."""
 
-#         User.query.delete()
-#         db.session.commit()
+        User.query.delete()
+        db.session.commit()
 
-#     def test_signup(self):
-#         with app.test_client() as client:
-#             resp = client.get("/signup")
-#             self.assertIn(b'Sign Up', resp.data)
+    def test_signup(self):
+        with app.test_client() as client:
+            resp = client.get("/signup")
+            self.assertIn(b'Sign Up', resp.data)
 
-#             resp = client.post(
-#                 "/signup",
-#                 data=TEST_USER_DATA_NEW,
-#                 follow_redirects=True,
-#             )
+            resp = client.post(
+                "/signup",
+                data=TEST_USER_DATA_NEW,
+                follow_redirects=True,
+            )
 
-#             self.assertIn(b"You are signed up and logged in.", resp.data)
-#             self.assertTrue(session.get(CURR_USER_KEY))
+            self.assertIn(b"Signed up successfully!", resp.data)
 
-#     def test_signup_username_taken(self):
-#         with app.test_client() as client:
-#             resp = client.get("/signup")
-#             self.assertIn(b'Sign Up', resp.data)
+            with client.session_transaction() as sess:
+                self.assertTrue(sess.get(CURR_USER_KEY))
 
-#             # signup with same data as the already-added user
-#             resp = client.post(
-#                 "/signup",
-#                 data=TEST_USER_DATA,
-#                 follow_redirects=True,
-#             )
+    def test_signup_username_taken(self):
+        with app.test_client() as client:
+            resp = client.get("/signup")
+            self.assertIn(b'Sign Up', resp.data)
 
-#             self.assertIn(b"Username already taken", resp.data)
+            # signup with same data as the already-added user
+            resp = client.post(
+                "/signup",
+                data=TEST_USER_DATA,
+                follow_redirects=True,
+            )
 
-#     def test_login(self):
-#         with app.test_client() as client:
-#             resp = client.get("/login")
-#             self.assertIn(b'Welcome Back!', resp.data)
+            self.assertIn(b"Username or email already taken", resp.data)
 
-#             resp = client.post(
-#                 "/login",
-#                 data={"username": "test", "password": "WRONG"},
-#                 follow_redirects=True,
-#             )
+    def test_login(self):
+        with app.test_client() as client:
+            resp = client.get("/login")
+            self.assertIn(b'Welcome Back!', resp.data)
 
-#             self.assertIn(b"Invalid credentials", resp.data)
+            resp = client.post(
+                "/login",
+                data={"username": "test", "password": "WRONG"},
+                follow_redirects=True,
+            )
 
-#             resp = client.post(
-#                 "/login",
-#                 data={"username": "test", "password": "secret"},
-#                 follow_redirects=True,
-#             )
+            self.assertIn(b"Invalid credentials", resp.data)
 
-#             self.assertIn(b"Hello, test", resp.data)
-#             self.assertEqual(session.get(CURR_USER_KEY), self.user_id)
+            resp = client.post(
+                "/login",
+                data={"username": "test", "password": "secret"},
+                follow_redirects=True,
+            )
 
-#     def test_logout(self):
-#         with app.test_client() as client:
-#             login_for_test(client, self.user_id)
-#             resp = client.post("/logout", follow_redirects=True)
+            self.assertIn(b"Hello, test", resp.data)
 
-#             self.assertIn(b"successfully logged out", resp.data)
-#             self.assertEqual(session.get(CURR_USER_KEY), None)
+            with client.session_transaction() as sess:
+                self.assertEqual(sess.get(CURR_USER_KEY), self.user_id)
+
+    def test_logout(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
+            resp = client.post("/logout", follow_redirects=True)
+
+            self.assertIn(b"Successfully logged out!", resp.data)
+
+            with client.session_transaction() as sess:
+                self.assertEqual(sess.get(CURR_USER_KEY), None)
 
 
 # class NavBarTestCase(TestCase):
