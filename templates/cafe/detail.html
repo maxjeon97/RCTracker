@@ -7,29 +7,45 @@
 <div class="row justify-content-center">
 
   <div class="col-10 col-sm-8 col-md-4 col-lg-3">
-    <img class="img-fluid mb-5" src="{{ cafe.image_url }}">
+    <img class="img-fluid" src="{{ cafe.image_url }}">
   </div>
 
   <div class="col-12 col-sm-10 col-md-8">
 
-    <h1>{{ cafe.name }}</h1>
+    <div class="d-flex align-items-center">
+      <h1 class="mb-0">{{ cafe.name }}</h1>
+      <button class="btn btn-sm btn-outline-success like-button" data-id="{{ cafe.id }}">
+      </button>
+    </div>
 
     <p class="lead">{{ cafe.description }}</p>
 
-    <p><a href="{{ cafe.url }}">{{ cafe.url }}</a></p>
+    <p><a href="{{ cafe.url }}" target="_blank">{{ cafe.url }}</a></p>
 
     <p>
       {{ cafe.address }}<br>
       {{ cafe.get_city_state() }}<br>
     </p>
 
-    <p>
-      <a class="btn btn-outline-primary" href="/cafes/{{ cafe.id }}/edit">
-        Edit Cafe
-      </a>
-    </p>
+    {% if g.user.admin %}
+    <div class="d-flex edit-delete-cafe">
+      <p>
+        <a class="btn btn-outline-primary" href="/cafes/{{ cafe.id }}/edit">
+          Edit Cafe
+        </a>
+      </p>
+      <form action="/cafes/{{cafe.id}}/delete" method="POST">
+        {{ g.csrf_form.hidden_tag() }}
+        <button type="submit" class="btn btn-outline-danger">Delete Cafe</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <p class="text-dark-emphasis"><b>Location</b></p>
+    <img class="map-img mb-5" src="/static/maps/{{cafe.id}}.jpg">
 
   </div>
 
 </div>
+<script src="/static/likes.js"></script>
 {% endblock %}

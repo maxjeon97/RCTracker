@@ -3,7 +3,7 @@
 
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-
+from mapping import save_map, delete_map_secure
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -88,6 +88,18 @@ class Cafe(db.Model):
 
         city = self.city
         return f'{city.name}, {city.state}'
+
+    def save_cafe_map(self):
+        """Saves map of cafe to the app"""
+
+        city = self.city
+        save_map(self.id, self.address, city.name, city.state)
+
+    def delete_map(self):
+        """Deletes map from the app"""
+
+        delete_map_secure(self.id)
+
 
 
 class User(db.Model):
@@ -199,10 +211,10 @@ class User(db.Model):
 
         return False
 
-    # def has_liked(self, message):
-    #     """Checks if this message is in likes. Returns True or False"""
+    def has_liked(self, cafe):
+        """Checks if user has liked a cafe. Returns True or False"""
 
-    #     return message in self.likes
+        return cafe in self.liked_cafes
 
 
 class Like(db.Model):

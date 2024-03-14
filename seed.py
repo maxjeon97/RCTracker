@@ -68,24 +68,24 @@ u1 = User.register(
     password="secret",
 )
 
-db.session.add_all([u1])
+db.session.add_all([u1, ua])
 db.session.commit()
 
 
 #######################################
 # add likes
 
-# u1.liked_cafes.append(c1)
-# u1.liked_cafes.append(c2)
-# ua.liked_cafes.append(c1)
+u1.liked_cafes.append(c1)
+u1.liked_cafes.append(c2)
+ua.liked_cafes.append(c1)
 
-# db.session.commit()
+db.session.commit()
 
 
 #######################################
 # cafe maps
 
-# c1.save_map()
-# c2.save_map()
-#
-# db.session.commit()
+c1.save_cafe_map()
+c2.save_cafe_map()
+
+db.session.commit()

@@ -1,0 +1,21 @@
+/* .prof-pic {
+  border-radius: 50%;
+} */
+
+.img-fluid {
+  padding-top: 8px;
+}
+
+.like-button {
+  margin-left: 15px;
+  margin-top: 10px;
+}
+
+.map-img {
+  width: 500px;
+  height: 500px;
+}
+
+.edit-delete-cafe {
+  gap: 10px;
+}

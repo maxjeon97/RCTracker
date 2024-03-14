@@ -1,25 +1,38 @@
-
 {% extends 'base.html' %}
 
-{% block title %} FULL NAME {% endblock %}
+{% block title %} {{ g.user.get_full_name() }} {% endblock %}
 
 {% block content %}
 
 <div class="row justify-content-center">
 
   <div class="col-4 col-sm-4 col-md-4 col-lg-3">
-    <img class="img-fluid mb-5" src="FIXME">
+    <img class="img-fluid prof-pic" src="{{ g.user.image_url }}">
+    <div class="row mt-4">
+      <div class="col-12">
+        <h3>Your Liked Cafes</h3>
+        {% if g.user.liked_cafes %}
+        <ul class="list-unstyled">
+          {% for cafe in g.user.liked_cafes %}
+          <li>&nbsp;<a href="/cafes/{{ cafe.id }}" class="text-primary">{{ cafe.name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <h8 class="text-primary">&nbsp;You have no liked cafes</h8>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <div class="col-12 col-sm-10 col-md-8">
-    <h1>FULL NAME</h1>
-    <p class="lead"> DESCRIPTION </p>
+    <h1>{{ g.user.get_full_name() }}</h1>
+    <p class="lead"> {{ g.user.description }} </p>
 
-    <p><b>Username:</b> USERNAME </p>
-    <p><b>Email:</b> EMAIL </p>
+    <p><b>Username:</b> {{ g.user.username }} </p>
+    <p><b>Email:</b> {{ g.user.email }} </p>
 
     <p>
-      <a class="btn btn-outline-primary" href="FIXME">
+      <a class="btn btn-outline-primary" href="/profile/edit">
         Edit Your Profile
       </a>
     </p>
@@ -27,5 +40,4 @@
   </div>
 
 </div>
-
 {% endblock %}
