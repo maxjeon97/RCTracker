@@ -272,6 +272,8 @@ def edit_cafe(cafe_id):
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
+    original_address = cafe.address
+
     form = CafeInfoForm(obj=cafe)
 
     cities_in_db = [(city.code, city.name)
@@ -288,8 +290,10 @@ def edit_cafe(cafe_id):
         if not form.image_url.data:
             cafe.image_url = Cafe.image_url.default.arg
 
-        db.session.flush()
-        cafe.save_cafe_map()
+        # only generate new map if address has changed
+        if original_address != form.address.data:
+            db.session.flush()
+            cafe.save_cafe_map()
 
         db.session.commit()
 
