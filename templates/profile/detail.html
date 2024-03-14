@@ -12,9 +12,9 @@
       <div class="col-12">
         <h3>Your Liked Cafes</h3>
         {% if g.user.liked_cafes %}
-        <ul class="list-unstyled">
+        <ul>
           {% for cafe in g.user.liked_cafes %}
-          <li>&nbsp;<a href="/cafes/{{ cafe.id }}" class="text-primary">{{ cafe.name }}</a></li>
+          <li class="text-outline"><a href="/cafes/{{ cafe.id }}" class="text-info">{{ cafe.name }}</a></li>
           {% endfor %}
         </ul>
         {% else %}

@@ -19,9 +19,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    "DATABASE_URL", 'postgresql:///flask_cafe')
-app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "shhhh")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY")
 
 if app.debug:
     app.config['SQLALCHEMY_ECHO'] = True
