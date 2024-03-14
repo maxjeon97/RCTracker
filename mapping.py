@@ -28,10 +28,6 @@ def save_map(id, address, city, state):
     if response.status_code == 200:
         with open(path, 'wb') as file:
             file.write(response.content)
-        print(f'Map saved to {path}')
-
-    else:
-        print("Map save failed")
 
 
 def delete_map_secure(id):
@@ -43,7 +39,6 @@ def delete_map_secure(id):
     try:
         if os.path.exists(path):
             os.remove(path)
-        else:
-            print(f"Map {id}.jpg does not exist")
+
     except Exception as e:
         print(f"An error occurred: {e}")
