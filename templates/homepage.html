@@ -4,11 +4,15 @@
 
 {% block content %}
 
-<h1 class="mb-4 text-primary-emphasis">Welcome!</h1>
-<h3 class="text-secondary-emphasis">A Way to Keep Track of Your Favorite Cafes</h3>
-
+<div class="welcome-msg d-flex flex-column justify-content-center align-items-center">
+  <h1 class="mb-4 text-primary-emphasis">Welcome!</h1>
+  <h3 class="text-secondary-emphasis">A Way to Keep Track of Your Favorite Restaurants and Cafes</h3>
+</div>
 <br>
+<div class="home-buttons d-flex flex-row justify-content-center align-items-center">
+  <a href="/cafes" class="btn btn-lg btn-primary">Browse Cafes</a>
+  <a href="/restaurants" class="btn btn-lg btn-primary">Browse Restaurants</a>
+</div>
 
-<a href="/cafes" class="btn btn-primary">Browse Cafes</a>
 
 {% endblock %}

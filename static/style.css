@@ -1,6 +1,7 @@
-/* .prof-pic {
+.prof-pic {
+  height: 20vh;
   border-radius: 50%;
-} */
+}
 
 .img-fluid {
   padding-top: 8px;
@@ -18,4 +19,21 @@
 
 .edit-delete-cafe {
   gap: 10px;
+}
+
+.home-buttons {
+  gap: 10px;
+}
+
+.welcome-msg {
+  margin-top: 20vh;
+}
+
+.block-content {
+  margin-top: 10vh;
+}
+
+.profile-page {
+  justify-content: center;
+  gap: 30px;
 }
