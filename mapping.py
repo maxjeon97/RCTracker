@@ -15,11 +15,11 @@ def get_map_url(address, city, state):
     return f"{base}&center={where}&size=@2x&zoom=15&locations={where}"
 
 
-def save_map(id, address, city, state):
+def save_map(id, type, address, city, state):
     """Get static map and save in static/maps directory of this app."""
 
     path = os.path.join(os.path.abspath(
-        os.path.dirname(__file__)), f'static/maps/{id}.jpg')
+        os.path.dirname(__file__)), f'static/maps/{type}{id}.jpg')
 
     url = get_map_url(address, city, state)
 
@@ -30,11 +30,11 @@ def save_map(id, address, city, state):
             file.write(response.content)
 
 
-def delete_map_secure(id):
+def delete_map_secure(id, type):
     """Delete a map image securely from the static/maps directory of this app."""
 
     path = os.path.join(os.path.abspath(
-        os.path.dirname(__file__)), f"static/maps/{id}.jpg")
+        os.path.dirname(__file__)), f"static/maps/{type}{id}.jpg")
 
     try:
         if os.path.exists(path):

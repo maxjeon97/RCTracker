@@ -4,23 +4,9 @@
 
 {% block content %}
 
-<div class="d-flex flex-row profile-page">
+<div class="d-flex flex-row justify-content-center profile-page">
   <div class="col-4 col-sm-4 col-md-4 col-lg-3">
     <img class="img-fluid prof-pic" src="{{ g.user.image_url }}">
-    <div class="row mt-4">
-      <div class="col-12">
-        <h3>Your Liked Cafes</h3>
-        {% if g.user.liked_cafes %}
-        <ul>
-          {% for cafe in g.user.liked_cafes %}
-          <li class="text-outline"><a href="/cafes/{{ cafe.id }}" class="text-info">{{ cafe.name }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <h8 class="text-primary">&nbsp;You have no liked cafes</h8>
-        {% endif %}
-      </div>
-    </div>
   </div>
 
   <div class="col-12 col-sm-10 col-md-8">
@@ -37,6 +23,34 @@
     </p>
 
   </div>
-
 </div>
+
+<div class="d-flex flex-row justify-content-center mt-5">
+  <div class="col-4">
+    <h3>Your Liked Cafes</h3>
+    {% if g.user.liked_cafes %}
+    <ul>
+      {% for cafe in g.user.liked_cafes %}
+      <li class="text-outline"><a href="/cafes/{{ cafe.id }}" class="text-info">{{ cafe.name }}</a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <h8 class="text-primary">&nbsp;You have no liked cafes</h8>
+    {% endif %}
+  </div>
+  <div class="col-4">
+    <h3>Your Liked Restaurants</h3>
+    {% if g.user.liked_restaurants %}
+    <ul>
+      {% for restaurant in g.user.liked_restaurants %}
+      <li class="text-outline"><a href="/restaurants/{{ restaurant.id }}" class="text-info">{{ restaurant.name }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <h8 class="text-primary">&nbsp;You have no liked restaurants</h8>
+    {% endif %}
+  </div>
+</div>
+
 {% endblock %}

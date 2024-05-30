@@ -21,19 +21,23 @@
   gap: 10px;
 }
 
-.home-buttons {
+.edit-delete-restaurant {
   gap: 10px;
 }
 
+.home-buttons {
+  gap: 15px;
+}
+
 .welcome-msg {
-  margin-top: 20vh;
+  margin-top: 15vh;
 }
 
 .block-content {
-  margin-top: 10vh;
+  margin-top: 7vh;
 }
 
 .profile-page {
   justify-content: center;
-  gap: 30px;
+  gap: 20px;
 }

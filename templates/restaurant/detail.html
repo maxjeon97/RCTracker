@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %} {{ restaurant.name }} {% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+  <div class="col-10 col-sm-8 col-md-4 col-lg-3">
+    <img class="img-fluid" src="{{ restaurant.image_url }}">
+  </div>
+
+  <div class="col-12 col-sm-10 col-md-8">
+
+    <div class="d-flex align-items-center">
+      <h1 class="mb-0">{{ restaurant.name }}</h1>
+      <button class="btn btn-outline-success like-button" data-id="{{ restaurant.id }}">
+      </button>
+    </div>
+
+    <p class="lead">{{ restaurant.description }}</p>
+
+    <p><a href="{{ restaurant.url }}" target="_blank">{{ restaurant.url }}</a></p>
+
+    <p>
+      {{ restaurant.address }}<br>
+      {{ restaurant.get_city_state() }}<br>
+    </p>
+
+    {% if g.user.admin %}
+    <div class="d-flex edit-delete-restaurant">
+      <p>
+        <a class="btn btn-outline-primary" href="/restaurants/{{ restaurant.id }}/edit">
+          Edit Restaurant
+        </a>
+      </p>
+      <form action="/restaurants/{{restaurant.id}}/delete" method="POST">
+        {{ g.csrf_form.hidden_tag() }}
+        <button type="submit" class="btn btn-outline-danger">Delete Restaurant</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <p class="text-dark-emphasis"><b>Location</b></p>
+    <img class="map-img mb-5" src="/static/maps/restaurant{{restaurant.id}}.jpg">
+
+  </div>
+
+</div>
+<script src="/static/restaurantLikes.js"></script>
+{% endblock %}

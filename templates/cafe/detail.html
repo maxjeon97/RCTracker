@@ -14,7 +14,7 @@
 
     <div class="d-flex align-items-center">
       <h1 class="mb-0">{{ cafe.name }}</h1>
-      <button class="btn btn-sm btn-outline-success like-button" data-id="{{ cafe.id }}">
+      <button class="btn btn-outline-success like-button" data-id="{{ cafe.id }}">
       </button>
     </div>
 
@@ -42,10 +42,10 @@
     {% endif %}
 
     <p class="text-dark-emphasis"><b>Location</b></p>
-    <img class="map-img mb-5" src="/static/maps/{{cafe.id}}.jpg">
+    <img class="map-img mb-5" src="/static/maps/cafe{{cafe.id}}.jpg">
 
   </div>
 
 </div>
-<script src="/static/likes.js"></script>
+<script src="/static/cafeLikes.js"></script>
 {% endblock %}

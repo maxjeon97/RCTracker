@@ -1,7 +1,7 @@
 "use strict";
 
 const $likeButton = $('.like-button');
-const LIKES_API = "/api/likes";
+const LIKES_CAFE_API = "/api/likes-cafe";
 
 /**Makes a request to the API to see whether cafe is liked by current user
  * Returns a boolean
@@ -10,7 +10,7 @@ async function isCafeLiked() {
   const cafeId = $likeButton.data('id');
   const params = new URLSearchParams({ q: cafeId });
 
-  const response = await fetch(`${LIKES_API}?${params}`);
+  const response = await fetch(`${LIKES_CAFE_API}?${params}`);
   const data = await response.json();
 
   const liked = (data.likes === "true");
@@ -34,7 +34,7 @@ async function displayInitialButtonHTML(liked) {
 async function handleLikeButtonClick() {
   const cafeId = $likeButton.data('id');
 
-  const response = await fetch(`${LIKES_API}-toggle`, {
+  const response = await fetch(`${LIKES_CAFE_API}-toggle`, {
     method: "POST",
     body: JSON.stringify({"cafe_id": cafeId}),
     headers: {

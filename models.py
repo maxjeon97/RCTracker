@@ -5,11 +5,13 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from mapping import save_map, delete_map_secure
 
+
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 
 DEFAULT_CAFE_PIC = "/static/images/default-cafe.png"
 DEFAULT_PROF_PIC = "/static/images/default-prof-pic.png"
+DEFAULT_RESTAURANT_PIC = "/static/images/default-restaurant.jpg"
 
 
 class City(db.Model):
@@ -93,14 +95,79 @@ class Cafe(db.Model):
         """Saves map of cafe to the app"""
 
         city = self.city
-        save_map(self.id, self.address, city.name, city.state)
+        save_map(self.id, "cafe", self.address, city.name, city.state)
 
     def delete_map(self):
         """Deletes map from the app"""
 
-        delete_map_secure(self.id)
+        delete_map_secure(self.id, "cafe")
 
+class Restaurant(db.Model):
+    """Restaurant information."""
 
+    __tablename__ = 'restaurants'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    name = db.Column(
+        db.String(50),
+        nullable=False,
+    )
+
+    description = db.Column(
+        db.Text,
+        nullable=False,
+        default=""
+    )
+
+    url = db.Column(
+        db.Text,
+        nullable=False,
+        default=""
+    )
+
+    address = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    city_code = db.Column(
+        db.Text,
+        db.ForeignKey('cities.code'),
+        nullable=False,
+    )
+
+    image_url = db.Column(
+        db.Text,
+        nullable=False,
+        default=DEFAULT_RESTAURANT_PIC,
+    )
+
+    city = db.relationship("City", backref='restaurants')
+
+    def __repr__(self):
+        return f'<Restaurant id={self.id} name="{self.name}">'
+
+    def get_city_state(self):
+        """Return 'city, state' for restaurant."""
+
+        city = self.city
+        return f'{city.name}, {city.state}'
+
+    def save_restaurant_map(self):
+        """Saves map of restaurant to the app"""
+
+        city = self.city
+        save_map(self.id, "restaurant", self.address, city.name, city.state)
+
+    def delete_map(self):
+        """Deletes map from the app"""
+
+        delete_map_secure(self.id, "restaurant")
 
 class User(db.Model):
     """User in the system."""
@@ -158,7 +225,10 @@ class User(db.Model):
     )
 
     liked_cafes = db.relationship(
-        'Cafe', secondary='likes', backref='liking_users')
+        'Cafe', secondary='cafe_likes', backref='liking_users')
+
+    liked_restaurants = db.relationship(
+        'Restaurant', secondary='restaurant_likes', backref='liking_users')
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -211,16 +281,21 @@ class User(db.Model):
 
         return False
 
-    def has_liked(self, cafe):
+    def has_liked_cafe(self, cafe):
         """Checks if user has liked a cafe. Returns True or False"""
 
         return cafe in self.liked_cafes
 
+    def has_liked_restaurant(self, restaurant):
+        """Checks if user has liked a restuarant. Returns True or False"""
 
-class Like(db.Model):
+        return restaurant in self.liked_restaurants
+
+
+class CafeLike(db.Model):
     """Through table that links users to cafes"""
 
-    __tablename__ = 'likes'
+    __tablename__ = 'cafe_likes'
 
     user_id = db.Column(
         db.Integer,
@@ -231,6 +306,23 @@ class Like(db.Model):
     cafe_id = db.Column(
         db.Integer,
         db.ForeignKey('cafes.id', ondelete="cascade"),
+        primary_key=True
+    )
+
+class RestaurantLike(db.Model):
+    """Through table that links users to restaurants"""
+
+    __tablename__ = 'restaurant_likes'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True
+    )
+
+    restaurant_id = db.Column(
+        db.Integer,
+        db.ForeignKey('restaurants.id', ondelete="cascade"),
         primary_key=True
     )
 

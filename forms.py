@@ -39,6 +39,32 @@ class CafeInfoForm(FlaskForm):
         validators=[Optional(), URL(), Length(max=255)]
     )
 
+class RestaurantInfoForm(FlaskForm):
+    """Form for adding/editing restaurants."""
+
+    name = StringField(
+        'Name',
+        validators=[InputRequired(), Length(max=50)],
+    )
+
+    description = TextAreaField('Description (Optional)')
+
+    url = StringField(
+        'URL',
+        validators=[Optional(), URL()]
+    )
+
+    address = StringField(
+        'Address',
+        validators=[InputRequired()]
+    )
+
+    city_code = SelectField('City')
+
+    image_url = StringField(
+        'Image URL (Optional)',
+        validators=[Optional(), URL(), Length(max=255)]
+    )
 
 class AddCityForm(FlaskForm):
     """Form for adding cities."""

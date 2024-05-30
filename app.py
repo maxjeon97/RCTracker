@@ -7,10 +7,10 @@ from flask import Flask, render_template, flash, redirect, jsonify, session, g
 from flask import request
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, Cafe, City, User
+from models import db, connect_db, Cafe, Restaurant, City, User
 
 from forms import CSRFProtectForm, CafeInfoForm, UserSignupForm, LoginForm
-from forms import ProfileEditForm, AddCityForm
+from forms import ProfileEditForm, AddCityForm, RestaurantInfoForm
 
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
@@ -332,6 +332,158 @@ def delete_cafe(cafe_id):
     else:
         raise Unauthorized()
 
+#######################################
+# restaurants
+
+
+@app.get('/restaurants')
+def restaurant_list():
+    """Return list of all restaurants."""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    restaurants = Restaurant.query.order_by('name').all()
+
+    return render_template(
+        'restaurant/list.html',
+        restaurants=restaurants,
+    )
+
+
+@app.get('/restaurants/<int:restaurant_id>')
+def restaurant_detail(restaurant_id):
+    """Show detail for restaurant."""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    restaurant = Restaurant.query.get_or_404(restaurant_id)
+
+    return render_template(
+        'restaurant/detail.html',
+        restaurant=restaurant,
+    )
+
+
+@app.route('/restaurants/add', methods=['GET', 'POST'])
+def add_restaurant():
+    """Renders form for adding a restaurant or handles adding of a restaurant"""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    if not g.user.admin:
+        raise Unauthorized()
+
+    form = RestaurantInfoForm()
+
+    cities_in_db = [(city.code, city.name)
+                    for city in City.query
+                    .order_by('name')
+                    .all()]
+
+    form.city_code.choices = cities_in_db
+
+    if form.validate_on_submit():
+        restaurant = Restaurant(
+            name=form.name.data,
+            description=form.description.data,
+            url=form.url.data,
+            address=form.address.data,
+            city_code=form.city_code.data,
+            image_url=form.image_url.data or Restaurant.image_url.default.arg
+        )
+
+        db.session.add(restaurant)
+
+        db.session.flush()
+        restaurant.save_restaurant_map()
+
+        db.session.commit()
+
+        flash(f"{restaurant.name} added!", "success")
+        return redirect(f'/restaurants/{restaurant.id}')
+
+    return render_template('restaurant/add-form.html', form=form)
+
+
+@app.route('/restaurants/<int:restaurant_id>/edit', methods=['GET', 'POST'])
+def edit_restaurant(restaurant_id):
+    """Renders form for editing a restaurant or handles editing of a restaurant"""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    if not g.user.admin:
+        raise Unauthorized()
+
+    restaurant = Restaurant.query.get_or_404(restaurant_id)
+
+    original_address = restaurant.address
+
+    form = RestaurantInfoForm(obj=restaurant)
+
+    cities_in_db = [(city.code, city.name)
+                    for city in City.query
+                    .order_by('name')
+                    .all()]
+
+    form.city_code.choices = cities_in_db
+
+    if form.validate_on_submit():
+        form.populate_obj(restaurant)
+
+        # if empty string is given in image_url field, set it to the default
+        if not form.image_url.data:
+            restaurant.image_url = Restaurant.image_url.default.arg
+
+        # only generate new map if address has changed
+        if original_address != form.address.data:
+            db.session.flush()
+            restaurant.save_restaurant_map()
+
+        db.session.commit()
+
+        flash(f"{restaurant.name} edited!", "success")
+        return redirect(f'/restaurants/{restaurant.id}')
+
+    # if we used the default picture, prepopulate with empty string
+    if restaurant.image_url == restaurant.image_url.default.arg:
+        form.image_url.data = ""
+
+    return render_template('restaurant/edit-form.html', form=form, restaurant=restaurant)
+
+
+@app.post('/restaurants/<int:restaurant_id>/delete')
+def delete_restaurant(restaurant_id):
+    """Deletes restaurant. Only admins may perform this action"""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    if not g.user.admin:
+        raise Unauthorized()
+
+    restaurant = Restaurant.query.get_or_404(restaurant_id)
+
+    if g.csrf_form.validate_on_submit():
+        restaurant.delete_map()
+
+        db.session.delete(restaurant)
+        db.session.commit()
+
+        flash('restaurant deleted!', 'success')
+        return redirect("/restaurants")
+
+    else:
+        raise Unauthorized()
+
 
 #######################################
 # cities
@@ -425,8 +577,8 @@ def edit_profile():
 # API likes
 
 
-@app.get("/api/likes")
-def check_like():
+@app.get("/api/likes-cafe")
+def check_cafe_like():
     """Given a cafe_id in the URL query string, check to see whether the
     current user likes that cafe. Returns JSON: {"likes": true|false}"""
 
@@ -438,7 +590,7 @@ def check_like():
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
-    if g.user.has_liked(cafe):
+    if g.user.has_liked_cafe(cafe):
         return jsonify({
             "likes": "true"
         })
@@ -448,7 +600,7 @@ def check_like():
         })
 
 
-@app.post('/api/likes-toggle')
+@app.post('/api/likes-cafe-toggle')
 def toggle_cafe_like():
     """Like and unlike a cafe"""
 
@@ -460,7 +612,7 @@ def toggle_cafe_like():
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
-    if g.user.has_liked(cafe):
+    if g.user.has_liked_cafe(cafe):
         g.user.liked_cafes.remove(cafe)
         db.session.commit()
 
@@ -470,3 +622,49 @@ def toggle_cafe_like():
         db.session.commit()
 
         return jsonify({"liked": cafe_id})
+
+@app.get("/api/likes-restaurant")
+def check_restaurant_like():
+    """Given a restaurant_id in the URL query string, check to see whether the
+    current user likes that restaurant. Returns JSON: {"likes": true|false}"""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/login")
+
+    restaurant_id = int(request.args.get("q"))
+
+    restaurant = Restaurant.query.get_or_404(restaurant_id)
+
+    if g.user.has_liked_restaurant(restaurant):
+        return jsonify({
+            "likes": "true"
+        })
+    else:
+        return jsonify({
+            "likes": "false"
+        })
+
+
+@app.post('/api/likes-restaurant-toggle')
+def toggle_restaurant_like():
+    """Like and unlike a restaurant"""
+
+    if not g.user:
+        flash(NOT_LOGGED_IN_MSG, "danger")
+        return redirect("/")
+
+    restaurant_id = int(request.json.get("restaurant_id"))
+
+    restaurant = Restaurant.query.get_or_404(restaurant_id)
+
+    if g.user.has_liked_restaurant(restaurant):
+        g.user.liked_restaurants.remove(restaurant)
+        db.session.commit()
+
+        return jsonify({"unliked": restaurant_id})
+    else:
+        g.user.liked_restaurants.append(restaurant)
+        db.session.commit()
+
+        return jsonify({"liked": restaurant_id})
