@@ -9,7 +9,7 @@ os.environ["FLASK_DEBUG"] = "0"
 import re
 from unittest import TestCase
 
-from models import db, Cafe, City, User, Like
+from models import db, Cafe, City, User, CafeLike
 from flask_bcrypt import Bcrypt
 
 from app import app , CURR_USER_KEY, NOT_LOGGED_IN_MSG
@@ -123,7 +123,7 @@ class HomepageViewsTestCase(TestCase):
     def test_homepage(self):
         with app.test_client() as client:
             resp = client.get("/")
-            self.assertIn(b'Keep Track of Your Favorite Cafes', resp.data)
+            self.assertIn(b'A Way to Keep Track of Your Favorite Restaurants and Cafes', resp.data)
 
 
 #######################################
@@ -546,7 +546,7 @@ class NavBarTestCase(TestCase):
             resp = client.get("/")
             self.assertEqual(resp.status_code, 200)
 
-            self.assertIn(b"Keep Track of Your Favorite Cafes", resp.data)
+            self.assertIn(b"A Way to Keep Track of Your Favorite Restaurants and Cafes", resp.data)
             self.assertIn(b"Sign Up", resp.data)
             self.assertIn(b"Log In", resp.data)
             self.assertNotIn(b"Log Out", resp.data)
@@ -558,7 +558,7 @@ class NavBarTestCase(TestCase):
             resp = client.get("/")
             self.assertEqual(resp.status_code, 200)
 
-            self.assertIn(b"Keep Track of Your Favorite Cafes", resp.data)
+            self.assertIn(b"A Way to Keep Track of Your Favorite Restaurants and Cafes", resp.data)
             self.assertNotIn(b"Sign Up", resp.data)
             self.assertNotIn(b"Log In", resp.data)
             self.assertIn(b"Log Out", resp.data)
@@ -645,7 +645,7 @@ class LikeViewsTestCase(TestCase):
 
     def setUp(self):
         """Before all tests, add sample city, cafes, users, and likes"""
-        Like.query.delete()
+        CafeLike.query.delete()
         Cafe.query.delete()
         City.query.delete()
         User.query.delete()
@@ -669,7 +669,7 @@ class LikeViewsTestCase(TestCase):
     def tearDown(self):
         """After each test, remove everything."""
 
-        Like.query.delete()
+        CafeLike.query.delete()
         Cafe.query.delete()
         City.query.delete()
         User.query.delete()
