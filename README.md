@@ -22,7 +22,7 @@ Password: secret
 * __Authentication__: Users can sign up, log in, and log out. Passwords are hashed with bcrypt.
 * __Authorization__: Protect routes so only authorized users can view.
 * __Likes__: Authenticated users can like/unlike restaurants and cafes. Likes will show up on their profile page.
-* __Add/remove Cities, Cafes, Restaurants__: Users with admin privileges can add or remove covered cities, cafes, and restaurants.
+* __Add/Remove Cities, Cafes, Restaurants__: Users with admin privileges can add or remove covered cities, cafes, and restaurants.
 * __Profile management__: Authenticated users can edit account information.
 
 
