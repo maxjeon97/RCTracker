@@ -43,8 +43,20 @@
 }
 
 .rctracker-logo {
-  width: 1.2vw;
+  width: 28px;
   height: auto;
   border-radius: 8px;
   margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+  .rctracker-logo {
+    width: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rctracker-logo {
+    width: 24px;
+  }
 }
