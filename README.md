@@ -1,7 +1,4 @@
-<!-- ABOUT THE PROJECT -->
 ## RCTracker
-
-<!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
 RCTracker is a way for you to keep track of your favorite cafes and restaurants.
 Logged in users can browse the existing locations and can request to obtain admin privileges,
@@ -34,7 +31,6 @@ Password: secret
 * [![Bootstrap][Bootstrap.com]][Bootstrap-url]
 
 
-<!-- SET UP -->
 ### Installation
 
 1. Clone the repo:
@@ -67,7 +63,6 @@ Password: secret
 
 
 
-<!-- TESTING EXAMPLES -->
 ### Testing
 
 There are four test files for testing data models and views for messages and users.
@@ -80,8 +75,6 @@ FLASK_DEBUG=False python -m unittest <name-of-test-file>
 
 
 
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
 [contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
